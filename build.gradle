@@ -1,22 +1,27 @@
-// TODO: Why does IntelliJ complain about these imports?
-import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import com.github.spotbugs.snom.SpotBugsTask
+import com.github.spotbugs.snom.Confidence
+import com.github.spotbugs.snom.Effort
 
 plugins {
-    id "build-dashboard" // See build/reports/buildDashboard/index.html
-    // TODO: project-report is presently broken because of pitest task
-    id "project-report" // Try the `projectReport` task
-    id "com.dorongold.task-tree"
-    id "com.github.ben-manes.versions" // Try the `dependencyUpdates` task
+    // TODO: Since Gradle is not static description but live code, does the
+    // ordering of plugins have impact?
     id "java" // Gradle support for Java
+    // TODO: #607. How to leverage the Gradle dashboard?
+    id "build-dashboard" // See build/reports/buildDashboard/index.html
+    // TODO: Leverage the projectReport task for showing in CI
+    id "project-report" // Try the `projectReport` task
+    alias libs.plugins.com.dorongold.task.tree.plugin
+    alias libs.plugins.com.github.ben.manes.versions.plugin
+    alias libs.plugins.nl.littlerobots.version.catalog.update.plugin
     id "checkstyle" // To check that code follow style standards
+    id "jacoco" // To run test coverage
     id "pmd" // Static analysis based on source (does not check compiled code)
     id "com.github.spotbugs" // Static analysis based on compiled code (does not check source)
-    id "com.github.andygoossens.gradle-modernizer-plugin"
-    id "jacoco" // To run test coverage
+    alias libs.plugins.com.diffplug.spotless.plugin
+    alias libs.plugins.com.github.andygoossens.gradle.modernizer.plugin
     id "info.solidsoft.pitest" // To run mutation testing
-    id "org.kordamp.gradle.jdeps"
-    id "org.owasp.dependencycheck" // To push security to the left
+    alias libs.plugins.org.kordamp.gradle.jdeps.plugin
+    alias libs.plugins.org.owasp.dependencycheck.plugin
     id "application" // To build the executable jar
 }
 
@@ -28,23 +33,22 @@ repositories {
 }
 
 dependencies {
-    compileOnly "org.projectlombok:lombok:$lombokVersion"
-    annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-    compileOnly "com.github.spotbugs:spotbugs-annotations:$spotbugsVersion"
-    compileOnly "com.google.code.findbugs:findbugs-annotations:$findbugsAnnotationsVersion"
-    compileOnly "org.gaul:modernizer-maven-annotations:$modernizerVersion"
+    compileOnly libs.org.projectlombok.lombok
+    annotationProcessor libs.org.projectlombok.lombok
+    compileOnly libs.com.github.spotbugs.spotbugs.annotations
+    compileOnly libs.com.google.code.findbugs.findbugs.annotations
+    compileOnly libs.org.gaul.modernizer.maven.annotations
 
-    testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-    testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-    testCompileOnly "com.google.code.findbugs:findbugs-annotations:$findbugsAnnotationsVersion"
+    testCompileOnly libs.org.projectlombok.lombok
+    testAnnotationProcessor libs.org.projectlombok.lombok
+    testCompileOnly libs.com.google.code.findbugs.findbugs.annotations
 
-    testImplementation "org.junit.jupiter:junit-jupiter:$junitVersion"
-    testImplementation "org.assertj:assertj-core:$assertJVersion"
-    testImplementation "org.mockito:mockito-core:$mockitoVersion"
-    testImplementation "com.github.stefanbirkner:system-lambda:$systemLambdaVersion"
+    testImplementation libs.org.junit.jupiter.junit.jupiter
+    testImplementation libs.org.assertj.assertj.core
+    testImplementation libs.org.mockito.mockito.core
 
     // Quiet build -- build works without this, but JUnit complains
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+    testRuntimeOnly libs.org.junit.jupiter.junit.jupiter.engine
 
     spotbugsPlugins "com.h3xstream.findsecbugs:findsecbugs-plugin:$findsecbugsPluginVersion"
 
@@ -63,7 +67,7 @@ dependencies {
     }
     */
     // Give special attention to a BCEL CVE triggered by Spotbugs
-    // TODO: Update spotbugs for CVE-2022-42920
+    // You only need this if you are not on a recent SpotBugs version
     constraints {
         spotbugs("org.apache.bcel:bcel") {
             version {
@@ -84,21 +88,17 @@ sourceSets {
 }
 
 configurations {
+    integratrationTestAnnotationProcessor.extendsFrom testAnnotationProcessor
     integrationTestImplementation.extendsFrom testImplementation
     integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
-}
-
-// TODO: Work around GitHub issue #54
-configurations.pmd {
-    resolutionStrategy {
-        forcedModules = ["commons-io:commons-io:2.11.0"]
-    }
 }
 
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of("$jdkVersion"))
     }
+    withJavadocJar() // Javadoc for "main" source code
+    // More configuration needed for "test" or "integrationTest" source code
 }
 
 tasks.withType(JavaCompile) {
@@ -145,32 +145,43 @@ checkstyle {
     // configFile = project(":").file("config/checkstyle/sun_checks.xml")
 }
 
+tasks.withType(Checkstyle) {
+    reports {
+        html.required = true
+        sarif.required = true
+        xml.required = true
+    }
+}
+
 pmd {
     ignoreFailures = false
-    // TODO: targetJdk = 17 -- there is no defined property for this
+    // TODO: targetJdk = 21 -- there is no defined property for this
     toolVersion = pmdVersion
 
     consoleOutput = true
     rulesMinimumPriority = 5
 
-
     // custom-rules.xml contains editable rule set
     // you can use it to adjust rules for your own project
-    ruleSets = [
-            rootProject.file("config/pmd/custom-rules.xml")
-    ]
+    // See https://docs.gradle.org/current/dsl/org.gradle.api.plugins.quality.PmdExtension.html#org.gradle.api.plugins.quality.PmdExtension:ruleSetFiles
+    ruleSetFiles = files(
+        "config/pmd/custom-rules.xml"
+    )
 
 }
 
 spotbugs {
-    effort = "Max"
-    reportLevel = "Low"
-    toolVersion = spotbugsVersion
+    effort = Effort.MAX
+    reportLevel = Confidence.valueOf("LOW")
+    toolVersion = libs.versions.com.github.spotbugs
 }
 
 tasks.withType(SpotBugsTask) {
     reports {
         html {
+            enabled = true
+        }
+        sarif {
             enabled = true
         }
         xml {
@@ -191,13 +202,35 @@ jacoco {
 
 jacocoTestReport {
     dependsOn test
+
+    reports {
+        csv.required = true
+        html.required = true
+        xml.required = true
+    }
 }
 
 jacocoTestCoverageVerification {
     violationRules {
         rule {
             limit {
-                minimum = 1.00
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = coverageLines.toBigDecimal()
+            }
+        }
+        rule {
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = coverageBranches.toBigDecimal()
+            }
+        }
+        rule {
+            limit {
+                counter = 'INSTRUCTION'
+                value = 'COVEREDRATIO'
+                minimum = coverageInstructions.toBigDecimal()
             }
         }
     }
@@ -210,7 +243,7 @@ pitest {
     // name, so this property needs to have a distinct name to satisfy Gradle
     pitestVersion = "$pitestToolVersion"
     timestampedReports = false
-    verbose = true
+    verbose = false // Set to true for noisy output
 }
 
 tasks.named("pitest") { // PITest plugin does not expose task as expected
@@ -227,6 +260,14 @@ dependencyCheck {
     failBuildOnCVSS = 0
     skip = Boolean.getBoolean("owasp.skip") // DEFAULT is false
     suppressionFile = rootProject.file("config/owasp-suppressions.xml")
+
+    nvd {
+        // This is intended to come from a local command-line setting, or from
+        // an environment variable. CI uses the environment variable.
+        // Using a command-line setting is poor practice without strong care
+        // so that the key is not leaked.
+        apiKey = findProperty("owasp.nvdApiKey") ?: System.getenv("OWASP_NVD_API_KEY")
+    }
 
     // Use this block when mirroring the NIST CVE data -- the data may suffer
     // timeouts for downloading. GitHub, for example, maintains caches of the
@@ -253,17 +294,21 @@ check {
     dependsOn += dependencyCheckAnalyze
 }
 
+/*
 tasks.withType(DependencyUpdatesTask) {
     rejectVersionIf {
         !isStable(it.candidate.version) && isStable(it.currentVersion)
     }
 }
+*/
 
 wrapper {
     gradleVersion = gradleWrapperVersion
     distributionType = "ALL"
 }
 
+// TODO: Decide if we should only check dependencies that are released
+/*
 static def isStable(version) {
     def stableKeyword = ["RELEASE", "FINAL", "GA"].any {
         version.uppercase().contains(it)
@@ -271,4 +316,12 @@ static def isStable(version) {
     def otherReleasePattern = version ==~ '^[0-9,.v-]+(-r)?$'
 
     return stableKeyword || otherReleasePattern
+}
+*/
+
+spotless {
+    // enforceCheck false
+    // NOTE: If you'd like to hold off these checks, you can uncomment this
+    // line. The default is "true".
+    // The example project passes cleanly when enforcing checks.
 }

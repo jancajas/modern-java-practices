@@ -1,0 +1,46 @@
+[versions]
+com-diffplug-spotless-plugin = "7.0.0.BETA2"
+com-dorongold-task-tree-plugin = "4.0.0"
+com-github-andygoossens-gradle-modernizer-plugin = "1.9.3"
+com-github-ben-manes-versions-plugin = "0.51.0"
+com-github-spotbugs = "4.8.6"
+com-google-code-findbugs = "3.0.1"
+com-h3xstream-findsecbugs-findsecbugs-plugin = "1.13.0"
+com-puppycrawl-tools-checkstyle = "10.18.1"
+nl-littlerobots-version-catalog-update-plugin = "0.8.4"
+org-assertj = "3.26.3"
+org-gaul-modernizer = "2.9.0"
+org-jacoco = "0.8.12"
+org-junit-jupiter = "5.11.0"
+org-kordamp-gradle-jdeps-plugin = "0.20.0"
+org-mockito = "5.13.0"
+org-owasp-dependencycheck-plugin = "10.0.4"
+org-pitest-pitest-command-line = "1.17.0"
+org-pitest-pitest-junit5-plugin = "1.2.1"
+org-projectlombok = "1.18.34"
+
+[libraries]
+com-github-spotbugs-spotbugs-annotations = { module = "com.github.spotbugs:spotbugs-annotations", version.ref = "com-github-spotbugs" }
+com-google-code-findbugs-findbugs-annotations = { module = "com.google.code.findbugs:findbugs-annotations", version.ref = "com-google-code-findbugs" }
+com-h3xstream-findsecbugs-findsecbugs-plugin = { module = "com.h3xstream.findsecbugs:findsecbugs-plugin", version.ref = "com-h3xstream-findsecbugs-findsecbugs-plugin" }
+com-puppycrawl-tools-checkstyle = { module = "com.puppycrawl.tools:checkstyle", version.ref = "com-puppycrawl-tools-checkstyle" }
+org-apache-bcel = "org.apache.bcel:bcel:6.10.0"
+org-assertj-assertj-core = { module = "org.assertj:assertj-core", version.ref = "org-assertj" }
+org-gaul-modernizer-maven-annotations = { module = "org.gaul:modernizer-maven-annotations", version.ref = "org-gaul-modernizer" }
+org-jacoco-org-jacoco-agent = { module = "org.jacoco:org.jacoco.agent", version.ref = "org-jacoco" }
+org-jacoco-org-jacoco-ant = { module = "org.jacoco:org.jacoco.ant", version.ref = "org-jacoco" }
+org-junit-jupiter-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "org-junit-jupiter" }
+org-junit-jupiter-junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "org-junit-jupiter" }
+org-mockito-mockito-core = { module = "org.mockito:mockito-core", version.ref = "org-mockito" }
+org-pitest-pitest-command-line = { module = "org.pitest:pitest-command-line", version.ref = "org-pitest-pitest-command-line" }
+org-pitest-pitest-junit5-plugin = { module = "org.pitest:pitest-junit5-plugin", version.ref = "org-pitest-pitest-junit5-plugin" }
+org-projectlombok-lombok = { module = "org.projectlombok:lombok", version.ref = "org-projectlombok" }
+
+[plugins]
+com-diffplug-spotless-plugin = { id = "com.diffplug.spotless", version.ref = "com-diffplug-spotless-plugin" }
+com-dorongold-task-tree-plugin = { id = "com.dorongold.task-tree", version.ref = "com-dorongold-task-tree-plugin" }
+com-github-andygoossens-gradle-modernizer-plugin = { id = "com.github.andygoossens.gradle-modernizer-plugin", version.ref = "com-github-andygoossens-gradle-modernizer-plugin" }
+com-github-ben-manes-versions-plugin = { id = "com.github.ben-manes.versions", version.ref = "com-github-ben-manes-versions-plugin" }
+nl-littlerobots-version-catalog-update-plugin = { id = "nl.littlerobots.version-catalog-update", version.ref = "nl-littlerobots-version-catalog-update-plugin" }
+org-kordamp-gradle-jdeps-plugin = { id = "org.kordamp.gradle.jdeps", version.ref = "org-kordamp-gradle-jdeps-plugin" }
+org-owasp-dependencycheck-plugin = { id = "org.owasp.dependencycheck", version.ref = "org-owasp-dependencycheck-plugin" }

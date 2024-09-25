@@ -1,36 +1,54 @@
-name: Build with Gradle using Earthly
+name: Earthly/Gradle CI
 
+env:
+  OWASP_NVD_API_KEY: ${{ secrets.OWASP_NVD_API_KEY }}
+  # Workaround for: https://github.com/earthly/earthly/issues/4220
+  EARTHLY_DISABLE_REMOTE_REGISTRY_PROXY: true
+
+# Ignore cross-build files with Maven
 on:
   push:
     paths-ignore:
+      # Generic files to ignore for building
       - '*.md'
       - 'images/**'
+      # These ignores are specific to a cross-build against Maven
+      - 'pom.xml'
+      - 'mvnw*' # Wraper scripts
+      - '.mvn/**'
+      - '.github/workflows/*maven*'
+      # These ignores are specific to this project
+      - 'run-with-maven.sh'
   pull_request:
     paths-ignore:
+      # Generic files to ignore for building
       - '*.md'
       - 'images/**'
-  workflow_dispatch:
+      # These ignores are specific to a cross-build against Maven
+      - 'pom.xml'
+      - 'mvnw*' # Wrapper scripts
+      - '.mvn/**'
+      - '.github/workflows/*maven*'
+      # These ignores are specific to this project
+      - 'run-with-maven.sh'
 
 jobs:
   build:
     name: Builds and tests
     runs-on: ubuntu-latest
-    # First run in GitHub actions - verify this
-    # Afterwards, change to a comment
-    strategy:
-      matrix:
-        include:
-          - java: 17
-          - java: 21
 
     steps:
       - name: Use Earthly
         uses: earthly/actions-setup@v1
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # The version in CI should match the version you use locally.
+          # This is a manual step.
+          # Using "latest" to force CI warnings if Earthfile is outdated
           version: "latest"
 
       - name: Clone repository
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
 
       - name: Restore Gradle caches
         uses: actions/cache@master
@@ -46,7 +64,54 @@ jobs:
             ${{ runner.os }}-
 
       - name: Build and test
-        run: earthly +build-with-gradle
+        run: earthly --secret OWASP_NVD_API_KEY +build-with-gradle
 
       - name: Execute run script
-        run: earthly +run-with-gradle
+        run: earthly --secret OWASP_NVD_API_KEY +run-with-gradle
+
+# Save artifacts for build
+# See Earthfile that copies these from container to local
+
+      - name: Save Jar for main
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar-main
+          if-no-files-found: error
+          path: build/libs/modern-java-practices-0-SNAPSHOT.jar
+
+# Javadoc HTML and jars
+
+      - name: Save Javadoc HTML for main
+        uses: actions/upload-artifact@v4
+        with:
+          name: javadoc-html-main
+          if-no-files-found: error
+          path: build/docs/javadoc/
+
+      - name: Save Javadoc HTML Jar for main
+        uses: actions/upload-artifact@v4
+        with:
+          name: javadoc-jar-main
+          if-no-files-found: error
+          path: build/libs/modern-java-practices-0-SNAPSHOT-javadoc.jar
+
+# Generate coverage report
+
+      - name: Save coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          if-no-files-found: error
+          path: build/reports/jacoco/test/
+
+      - name: Generate coverage badge
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          badges-directory: images
+          jacoco-csv-file: build/reports/jacoco/test/jacocoTestReport.csv
+          # To avoid conflicts with the Maven build, only generate the badge
+          # there. For Gradle only projects: REMOVE THIS LINE.
+          generate-coverage-badge: false
+          generate-branches-badge: false
+          generate-summary: false
+

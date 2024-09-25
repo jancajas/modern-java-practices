@@ -1,12 +1,34 @@
+// Note:
+// When you see "$fooVersion", those are versions pulled from
+// "gradle.properties".
+
+// TODO: Migrate these to use the version catalog (like other plugins in
+// "build.gradle").
 pluginManagement {
     plugins {
-        id "com.dorongold.task-tree" version "$taskTreePluginVersion"
-        id "com.github.andygoossens.gradle-modernizer-plugin" version "$modernizerPluginVersion"
-        id "com.github.ben-manes.versions" version "$versionsPluginVersion"
         id "com.github.spotbugs" version "$spotbugsPluginVersion"
         id "info.solidsoft.pitest" version "$pitestPluginVersion"
-        id "org.kordamp.gradle.jdeps" version "$jdepsPluginVersion"
-        id "org.owasp.dependencycheck" version "$dependencyCheckPluginVersion"
+    }
+}
+
+buildscript {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.kordamp.gradle:enforcer-gradle-plugin:$enforcerPluginVersion"
+    }
+}
+
+apply plugin: "org.kordamp.gradle.enforcer"
+
+// See https://kordamp.org/enforcer-gradle-plugin/#_rules for the kinds of
+// rules you can set up.
+enforce {
+    rule(enforcer.rules.RequireGradleVersion) { r ->
+        r.version = "$gradleWrapperVersion"
     }
 }
 

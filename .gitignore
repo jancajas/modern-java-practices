@@ -1,12 +1,16 @@
-# Assumes use of IntelliJ or Fleet -- adjust to the editors you use
+# Assumes use of IntelliJ -- adjust to the editors you use
 *.iml
 /.idea/
-/.fleet/
 
 # Gradle -- pick this or Maven
 /.gradle/
 /build/
 
 # Maven -- pick this or Gradle
-/.profiler/
 /target/
+
+# When running GitHub actions locally
+/workflow-artifacts/
+
+# DO NOT commit, push, or share. The env vars may hold secrets.
+/.envrc

@@ -3,14 +3,6 @@
         xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
     <suppress>
         <notes><![CDATA[
-        See https://github.com/google/guava/issues/4011
-        Unclear why this DependencyCheck failure has started now for a 2020 CVE,
-        and why it crops up for Gradle builds, but not for Maven builds
-        ]]></notes>
-        <cve>CVE-2020-8908</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
         See https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-2976
         Unclear why this crops up for Gradle build, but not the Maven build.
         Further, it is not yet an assigned CVE
@@ -43,5 +35,13 @@
         Spotbugs is the plugin where this came up.
         ]]></notes>
       <cve>CVE-2023-45960</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        Another false positive. This project does not use the referenced
+        software.
+        See https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-0897.
+        ]]></notes>
+        <cve>CVE-2015-0897</cve>
     </suppress>
 </suppressions>
